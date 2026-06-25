@@ -1,0 +1,6 @@
+{
+  "name": "Hareruya MTG Card Price Crawler",
+  "description": "Inspect and track Magic: The Gathering card prices from the Hareruya Card Shop by set.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
