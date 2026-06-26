@@ -1,6 +1,5 @@
 import express from 'express';
 import path from 'path';
-import { createServer as createViteServer } from 'vite';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
@@ -119,7 +118,7 @@ app.get('/api/scrape', async (req, res) => {
   try {
     console.log(`Scraping Hareruya API: ${apiUrl}`);
     
-    // Step 1: Query the Unisearch JSON API
+    // Step 1: Query the Unisearch JSON API (timeout optimized for Vercel Serverless Function limits)
     const apiResponse = await axios.get(apiUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -127,7 +126,7 @@ app.get('/api/scrape', async (req, res) => {
         'X-Requested-With': 'XMLHttpRequest',
         'Referer': `https://www.hareruyamtg.com/en/products/search?cardset=${cardset}&stock=${isStockOnly ? '1' : ''}`
       },
-      timeout: 15000
+      timeout: 6000
     });
 
     const data = apiResponse.data;
@@ -142,7 +141,7 @@ app.get('/api/scrape', async (req, res) => {
       return res.json({ success: true, count: 0, totalCount, items: [] });
     }
 
-    // Step 2: Query Hareruya's lazy html renderer to obtain details (prices and links)
+    // Step 2: Query Hareruya's lazy html renderer to obtain details (prices and links) (timeout optimized for Vercel)
     const renderUrl = 'https://www.hareruyamtg.com/en/products/search/unisearch/lazy';
     const renderResponse = await axios.post(renderUrl, {
       docs: docs,
@@ -154,7 +153,7 @@ app.get('/api/scrape', async (req, res) => {
         'X-Requested-With': 'XMLHttpRequest',
         'Referer': `https://www.hareruyamtg.com/en/products/search?cardset=${cardset}&stock=${isStockOnly ? '1' : ''}`
       },
-      timeout: 15000
+      timeout: 6000
     });
 
     const html = renderResponse.data;
@@ -231,6 +230,7 @@ app.get('/api/scrape', async (req, res) => {
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
