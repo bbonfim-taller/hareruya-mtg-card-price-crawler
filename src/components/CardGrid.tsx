@@ -1,6 +1,6 @@
 import { CardItem } from '../types';
-import { Heart, ExternalLink, ArrowLeft, ArrowRight, Layers, Flame, TrendingUp } from 'lucide-react';
-import { CurrencyType, formatPrice } from '../utils/currency';
+import { Heart, ExternalLink, ArrowLeft, ArrowRight, Layers, Flame, TrendingUp, Info } from 'lucide-react';
+import { CurrencyType, formatPrice, formatBrlPrice, convertBrlPrice, formatCadPrice, convertCadPrice } from '../utils/currency';
 
 interface CardGridProps {
   items: CardItem[];
@@ -169,9 +169,14 @@ export default function CardGrid({
                   {/* Text Details Block */}
                   <div className="p-4 space-y-2.5">
                     <div className="space-y-1">
-                      <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">
-                        {item.condition === '1' ? 'Near Mint (NM)' : 'Condition ID: ' + item.condition}
-                      </span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">
+                          {item.condition === '1' ? 'Near Mint (NM)' : 'Condition ID: ' + item.condition}
+                        </span>
+                        {item.ligaStatus === 'live' && (
+                          <span className="text-[8px] font-semibold px-1 py-0.2 bg-emerald-950/40 text-emerald-400 border border-emerald-900/30 rounded">Synced</span>
+                        )}
+                      </div>
                       <a
                         href={item.detailUrl}
                         target="_blank"
@@ -181,6 +186,11 @@ export default function CardGrid({
                       >
                         {cleanName}
                       </a>
+                      {item.ligaNamePt && item.ligaNamePt !== cleanName && (
+                        <span className="text-[10px] text-zinc-400 font-medium block truncate" title="LigaMagic Portuguese Name">
+                          PT: {item.ligaNamePt}
+                        </span>
+                      )}
                     </div>
 
                     {/* Badges / Metrics Row */}
@@ -202,23 +212,149 @@ export default function CardGrid({
                 </div>
 
                 {/* Bottom Price & Call To Action Block */}
-                <div className="p-4 pt-0 border-t border-zinc-900/50 mt-auto bg-zinc-950">
-                  <div className="flex items-center justify-between pt-3">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] text-zinc-500 uppercase tracking-widest font-mono">Price</span>
-                      <span className="text-sm sm:text-base font-mono font-bold text-white tracking-tight">
+                <div className="p-3 pt-2.5 border-t border-zinc-900/50 mt-auto bg-zinc-950/40 space-y-2.5">
+                  {/* Price Grid (Hareruya vs 401 Games vs LigaMagic) */}
+                  <div className="grid grid-cols-3 gap-1 text-[10px]">
+                    {/* Hareruya (Japan) */}
+                    <div className="bg-zinc-900/40 p-1.5 rounded-lg border border-zinc-900/80">
+                      <span className="text-[8px] text-zinc-500 uppercase tracking-wider font-mono block">Hareruya</span>
+                      <span className="font-mono font-bold text-white block mt-0.5 text-[11px] truncate" title="Hareruya Price">
                         {formatPrice(item.priceNumeric, currency, rates)}
+                      </span>
+                      <span className="text-[7px] text-zinc-600 block">Japan</span>
+                    </div>
+
+                    {/* 401 Games (Canada) */}
+                    <div className="bg-zinc-900/40 p-1.5 rounded-lg border border-zinc-900/80 relative">
+                      <span className="text-[8px] text-zinc-500 uppercase tracking-wider font-mono flex items-center justify-between">
+                        <span>401 Games</span>
+                        {item.fourZeroOneStatus === 'live' && (
+                          <span className={`h-1 w-1 rounded-full ${item.fourZeroOneAvailable ? 'bg-emerald-500' : 'bg-rose-500'}`} title={item.fourZeroOneAvailable ? 'In Stock' : 'Out of Stock'} />
+                        )}
+                      </span>
+                      <span className="font-mono font-bold text-sky-400 block mt-0.5 text-[11px] truncate" title="401 Games Price">
+                        {item.fourZeroOnePrice ? formatCadPrice(item.fourZeroOnePrice, currency, rates) : 'No Price'}
+                      </span>
+                      <span className="text-[7px] text-zinc-600 block truncate">
+                        {item.fourZeroOneStatus === 'live' ? (item.fourZeroOneAvailable ? 'In Stock' : 'Out of Stock') : 'Not Found'}
                       </span>
                     </div>
 
+                    {/* LigaMagic (Brazil) */}
+                    <div className="bg-zinc-900/40 p-1.5 rounded-lg border border-zinc-900/80 relative group/liga">
+                      <span className="text-[8px] text-zinc-500 uppercase tracking-wider font-mono flex items-center justify-between">
+                        <span>LigaMagic</span>
+                        {item.ligaStatus === 'live' ? (
+                          <span className="h-1 w-1 rounded-full bg-emerald-500" title="Live Synced" />
+                        ) : (
+                          <div className="flex items-center cursor-help">
+                            <span className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
+                          </div>
+                        )}
+                      </span>
+                      <span className="font-mono font-bold text-amber-400 block mt-0.5 text-[11px] truncate" title="LigaMagic Price">
+                        {item.ligaPriceMed ? formatBrlPrice(item.ligaPriceMed, currency, rates) : 'No Price'}
+                      </span>
+                      <span className="text-[7px] text-zinc-600 block truncate" title={item.ligaStatus === 'live' ? 'BRL Live Median Price' : 'Estimated BRL'}>
+                        {item.ligaStatus === 'live' ? 'Live Med' : 'Estimated'}
+                      </span>
+
+                      {/* Tooltip on hover when estimated */}
+                      {item.ligaStatus !== 'live' && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 p-2 bg-zinc-950 border border-zinc-800 text-[9px] leading-normal text-zinc-400 rounded-lg opacity-0 invisible group-hover/liga:opacity-100 group-hover/liga:visible transition-all duration-200 shadow-xl z-20">
+                          <div className="font-bold text-amber-400 mb-0.5">LigaMagic Estimated</div>
+                          Direct scrape blocked by Cloudflare. Estimated using Hareruya's JPY price + 25% local premium.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Price Differences Section */}
+                  <div className="space-y-1">
+                    {/* 401 Games vs Hareruya Difference */}
+                    {item.priceNumeric > 0 && item.fourZeroOnePrice && (
+                      (() => {
+                        const hRate = rates[currency] || 1;
+                        const hVal = item.priceNumeric * hRate;
+                        const fVal = convertCadPrice(item.fourZeroOnePrice, currency, rates);
+                        
+                        const diffVal = fVal - hVal;
+                        const diffPct = (diffVal / hVal) * 100;
+
+                        return (
+                          <div className="flex items-center justify-between text-[9px] px-2 py-0.5 bg-zinc-900/10 border border-zinc-900/40 rounded">
+                            <span className="text-zinc-500">401 vs Hareruya:</span>
+                            <span className={`font-mono font-semibold ${diffVal > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              {diffVal > 0 ? '+' : ''}{diffPct.toFixed(1)}% ({diffVal > 0 ? '+' : ''}{formatPrice(Math.round(Math.abs(diffVal) / hRate), currency, rates)})
+                            </span>
+                          </div>
+                        );
+                      })()
+                    )}
+
+                    {/* LigaMagic vs Hareruya Difference */}
+                    {item.priceNumeric > 0 && item.ligaPriceMed && (
+                      (() => {
+                        const hRate = rates[currency] || 1;
+                        const hVal = item.priceNumeric * hRate;
+                        const lVal = convertBrlPrice(item.ligaPriceMed, currency, rates);
+                        
+                        const diffVal = lVal - hVal;
+                        const diffPct = (diffVal / hVal) * 100;
+
+                        return (
+                          <div className="flex items-center justify-between text-[9px] px-2 py-0.5 bg-zinc-900/10 border border-zinc-900/40 rounded">
+                            <span className="text-zinc-500">Liga vs Hareruya:</span>
+                            <span className={`font-mono font-semibold ${diffVal > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              {diffVal > 0 ? '+' : ''}{diffPct.toFixed(1)}% ({diffVal > 0 ? '+' : ''}{formatPrice(Math.round(Math.abs(diffVal) / hRate), currency, rates)})
+                            </span>
+                          </div>
+                        );
+                      })()
+                    )}
+                  </div>
+
+                  {/* Actions row */}
+                  <div className="flex items-center justify-between gap-1 pt-1.5 border-t border-zinc-900/30">
+                    <div className="flex items-center gap-1 text-[9px] text-zinc-400">
+                      <a
+                        href={item.detailUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-white transition-colors"
+                        title="View on Hareruya"
+                      >
+                        Hareruya
+                      </a>
+                      <span>|</span>
+                      <a
+                        href={item.fourZeroOneDetailUrl || `https://store.401games.ca/search?q=${encodeURIComponent(item.cardName)}&filters=In+Stock,True`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-sky-400 transition-colors"
+                        title={item.fourZeroOneDetailUrl ? "View on 401 Games" : "Search in-stock on 401 Games"}
+                      >
+                        401
+                      </a>
+                      <span>|</span>
+                      <a
+                        href={item.ligaDetailUrl || `https://www.ligamagic.com.br/?view=cards/search&card=${encodeURIComponent(item.cardName)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-amber-400 transition-colors"
+                        title="View on LigaMagic"
+                      >
+                        Liga
+                      </a>
+                    </div>
+
                     <a
-                      href={item.detailUrl}
+                      href={item.fourZeroOneDetailUrl || item.detailUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-zinc-900 hover:bg-amber-500 hover:text-black text-zinc-300 text-xs font-bold rounded-lg transition-colors border border-zinc-800 hover:border-amber-500 cursor-pointer"
+                      className="inline-flex items-center px-2 py-0.5 bg-zinc-900 hover:bg-amber-500 hover:text-black text-zinc-300 text-[9px] font-bold rounded transition-colors border border-zinc-800 hover:border-amber-500 cursor-pointer"
                     >
-                      Inspect Detail
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      Buy
                     </a>
                   </div>
                 </div>

@@ -17,6 +17,18 @@ export interface CardItem {
   foil: boolean;
   language: string;
   condition: string;
+  ligaPriceMin?: number;
+  ligaPriceMed?: number;
+  ligaPriceMax?: number;
+  ligaNamePt?: string;
+  ligaDetailUrl?: string;
+  ligaStatus?: 'live' | 'estimated_cloudflare_block' | 'estimated_no_match';
+  fourZeroOnePrice?: number;
+  fourZeroOnePriceMin?: number;
+  fourZeroOnePriceMax?: number;
+  fourZeroOneDetailUrl?: string;
+  fourZeroOneAvailable?: boolean;
+  fourZeroOneStatus?: 'live' | 'not_found' | 'error';
 }
 
 export interface SearchHistoryItem {

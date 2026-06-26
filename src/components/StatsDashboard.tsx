@@ -239,6 +239,7 @@ export default function StatsDashboard({ items, currency, rates }: StatsDashboar
                   if (currency === 'BRL') return [`R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Price'];
                   if (currency === 'USD') return [`$${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Price'];
                   if (currency === 'EUR') return [`€${val.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Price'];
+                  if (currency === 'CAD') return [`CA$ ${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Price'];
                   return [`${val.toFixed(2)}`, 'Price'];
                 }}
               />

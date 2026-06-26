@@ -15,7 +15,8 @@ import {
   History,
   ShieldAlert,
   SlidersHorizontal,
-  X
+  X,
+  ExternalLink
 } from 'lucide-react';
 
 export default function App() {
@@ -58,6 +59,7 @@ export default function App() {
               BRL: data.rates.BRL || DEFAULT_RATES.BRL,
               USD: data.rates.USD || DEFAULT_RATES.USD,
               EUR: data.rates.EUR || DEFAULT_RATES.EUR,
+              CAD: data.rates.CAD || DEFAULT_RATES.CAD,
             });
           }
         }
@@ -136,6 +138,7 @@ export default function App() {
     // Build URL query parameters
     const params = new URLSearchParams();
     params.append('cardset', set.code);
+    params.append('setName', set.name);
     if (keyword.trim()) {
       params.append('keyword', keyword.trim());
     }
@@ -313,13 +316,13 @@ export default function App() {
           <div className="absolute top-0 right-0 h-40 w-40 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
           <div className="max-w-3xl space-y-2">
             <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-950/40 text-amber-400 border border-amber-900/50 text-[10px] uppercase font-bold tracking-widest rounded-full mb-1">
-              <Sparkles className="h-3 w-3" /> Live Scraper
+              <Sparkles className="h-3 w-3" /> Cross-Border Triple Scraper
             </div>
             <h2 className="text-xl font-bold tracking-tight text-white">
-              Crawl card prices dynamically on demand
+              Head-to-Head Arbitrage: Hareruya vs. 401 Games vs. LigaMagic
             </h2>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              Query specific sets directly from Hareruya. This tool requests the live Hareruya Unisearch API and extracts details like products, prices under <code className="text-zinc-200 bg-zinc-900/50 px-1 py-0.5 rounded font-mono text-[10px]">.itemDetail__price</code>, condition and stock counts. Use the filters below to browse, analyze, or watchlist high-value items.
+              This tool queries the live indexes of <strong>Hareruya</strong> (Japan), <strong>401 Games</strong> (Canada), and <strong>LigaMagic</strong> (Brazil) in parallel. All prices are calculated dynamically using live exchange rates, allowing instant 1:1 side-by-side comparison across three regions to locate cross-border arbitrage opportunities.
             </p>
           </div>
         </div>
@@ -428,6 +431,42 @@ export default function App() {
                 <RotateCw className={`h-4 w-4 ${itemsLoading ? 'animate-spin' : ''}`} />
                 {itemsLoading ? 'Crawl in progress...' : 'Inspect Set Prices'}
               </button>
+
+              {/* Direct Store Links */}
+              {selectedSet && (
+                <div className="space-y-2 pt-3 border-t border-zinc-900">
+                  <span className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
+                    <span>Direct Store Links</span>
+                    <span className="text-[9px] text-emerald-500 font-mono">In Stock Sync</span>
+                  </span>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {/* 401 Games Link */}
+                    <a
+                      href={`https://store.401games.ca/collections/mtg-expansion-sets?filters=Set,Set_${encodeURIComponent(selectedSet.name)}&filters=In+Stock,True`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between px-3 py-2 bg-sky-950/25 hover:bg-sky-900/30 border border-sky-900/40 hover:border-sky-500 text-sky-400 hover:text-sky-300 rounded-lg transition-all text-[11px] font-semibold cursor-pointer"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        401 Games ({selectedSet.name})
+                      </span>
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                    </a>
+
+                    {/* Hareruya Link */}
+                    <a
+                      href={`https://www.hareruyamtg.com/en/products/search?fq.cardset=${selectedSet.code}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between px-3 py-2 bg-zinc-900/40 hover:bg-zinc-800 border border-zinc-900 hover:border-zinc-700 text-zinc-300 rounded-lg transition-all text-[11px] cursor-pointer"
+                    >
+                      <span>Hareruya Store</span>
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Watchlist Panel */}
@@ -535,6 +574,7 @@ export default function App() {
                     <option value="BRL">R$ BRL (Real)</option>
                     <option value="USD">$ USD (Dollar)</option>
                     <option value="EUR">€ EUR (Euro)</option>
+                    <option value="CAD">CA$ CAD (Dollar)</option>
                   </select>
                 </div>
 
